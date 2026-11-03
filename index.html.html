@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Maze Adventure - Pengembaraan Matematik KSSM</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font - Fredoka & Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Fredoka', 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            color: #f8fafc;
+            user-select: none;
+        }
+        
+        /* Custom Canvas Styling */
+        #gameCanvas {
+            background-color: #0f172a;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+            border-radius: 1rem;
+            touch-action: none;
+        }
+
+        /* Modal Overlay Transition */
+        .modal-animate {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Glowing Effects */
+        .glow-btn {
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.5);
+            transition: all 0.2s ease;
+        }
+        .glow-btn:hover {
+            box-shadow: 0 0 25px rgba(234, 179, 8, 0.8);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar for Teacher Dashboard */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #6366f1;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between items-center p-2 sm:p-4">
+
+    <!-- HEADER / NAVIGATION BAR -->
+    <header class="w-full max-w-5xl flex justify-between items-center bg-slate-900/80 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-indigo-500/30 mb-3 shadow-lg">
+        <div class="flex items-center gap-3">
+            <div class="bg-amber-500 text-slate-900 p-2.5 rounded-xl text-xl sm:text-2xl font-bold shadow-md">
+                <i class="fa-solid fa-compass fa-spin" style="--fa-animation-duration: 10s;"></i>
+            </div>
+            <div>
+                <h1 class="text-lg sm:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-orange-400 to-yellow-200">
+                    MATH MAZE ADVENTURE
+                </h1>
+                <p class="text-xs text-indigo-300 hidden sm:block">Pengembaraan Matematik KSSM Tingkatan 1, 2 & 3</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="btnTeacherNav" onclick="openTeacherDashboard()" class="px-3 py-2 bg-indigo-600/80 hover:bg-indigo-500 text-white rounded-xl text-xs sm:text-sm font-semibold transition border border-indigo-400/30 flex items-center gap-1.5 shadow">
+                <i class="fa-solid fa-chalkboard-user"></i> <span class="hidden sm:inline">Paparan Guru / Rekod</span>
+            </button>
+            <button id="btnGuideNav" onclick="toggleGuideModal(true)" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center gap-1">
+                <i class="fa-solid fa-circle-info"></i> <span class="hidden sm:inline">Panduan</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN GAME CONTAINER -->
+    <main class="w-full max-w-5xl flex-grow flex flex-col justify-center items-center relative">
+
+        <!-- SCREEN 1: REGISTRATION FORM -->
+        <div id="screenRegistration" class="w-full max-w-md bg-slate-900/90 backdrop-blur-md p-6 sm:p-8 rounded-3xl border border-indigo-500/30 shadow-2xl modal-animate my-auto">
+            <div class="text-center mb-6">
+                <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-3 shadow-lg text-4xl">
+                    🧙‍♂️
+                </div>
+                <h2 class="text-2xl font-bold text-amber-300">Daftar Pengembara</h2>
+                <p class="text-xs text-slate-400 mt-1">Sila masukkan maklumat diri sebelum memulakan cabaran labirin Matematik.</p>
+            </div>
+
+            <form id="formRegister" onsubmit="event.preventDefault(); startGame();" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-indigo-300 mb-1">NAMA PENUH PEMAIN</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
+                        <input type="text" id="inputName" required placeholder="Cth: Ahmad Rayyan" 
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-amber-400 text-white placeholder-slate-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-300 mb-1">TINGKATAN</label>
+                        <select id="inputForm" required class="w-full py-2.5 px-3 bg-slate-800/90 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-amber-400 text-white">
+                            <option value="Tingkatan 1">Tingkatan 1</option>
+                            <option value="Tingkatan 2">Tingkatan 2</option>
+                            <option value="Tingkatan 3">Tingkatan 3</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-indigo-300 mb-1">KELAS</label>
+                        <input type="text" id="inputClass" required placeholder="Cth: 1 Ibnu Sina" 
+                            class="w-full px-3 py-2.5 bg-slate-800/90 border border-slate-700 rounded-xl text-sm focus:outline-none focus:border-amber-400 text-white placeholder-slate-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-indigo-300 mb-1">PILIH AVATAR WATAK</label>
+                    <div class="grid grid-cols-4 gap-2 text-center" id="avatarSelector">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="🧙‍♂️" checked class="peer hidden">
+                            <div class="p-2 bg-slate-800 rounded-xl border border-slate-700 peer-checked:border-amber-400 peer-checked:bg-indigo-900/50 text-2xl hover:scale-105 transition">🧙‍♂️</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="🧝‍♀️" class="peer hidden">
+                            <div class="p-2 bg-slate-800 rounded-xl border border-slate-700 peer-checked:border-amber-400 peer-checked:bg-indigo-900/50 text-2xl hover:scale-105 transition">🧝‍♀️</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="🦸‍♂️" class="peer hidden">
+                            <div class="p-2 bg-slate-800 rounded-xl border border-slate-700 peer-checked:border-amber-400 peer-checked:bg-indigo-900/50 text-2xl hover:scale-105 transition">🦸‍♂️</div>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="avatar" value="🤖" class="peer hidden">
+                            <div class="p-2 bg-slate-800 rounded-xl border border-slate-700 peer-checked:border-amber-400 peer-checked:bg-indigo-900/50 text-2xl hover:scale-105 transition">🤖</div>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full mt-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-bold rounded-xl text-base shadow-lg glow-btn flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-play"></i> MULAKAN PENGEMBARAAN
+                </button>
+            </form>
+        </div>
+
+        <!-- SCREEN 2: GAMEPLAY AREA -->
+        <div id="screenGameplay" class="w-full hidden flex-col items-center gap-3">
+            
+            <!-- GAME STATS BAR -->
+            <div class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 flex flex-wrap justify-between items-center gap-2 shadow-md">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <i class="fa-solid fa-user-ninja text-amber-400 text-sm"></i>
+                        <span id="hudPlayerName" class="text-xs sm:text-sm font-semibold text-slate-200">Pemain</span>
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <i class="fa-solid fa-graduation-cap text-indigo-400 text-sm"></i>
+                        <span id="hudPlayerForm" class="text-xs sm:text-sm font-semibold text-slate-300">Form</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <!-- Hearts -->
+                    <div class="flex items-center gap-1 bg-red-950/40 border border-red-800/50 px-3 py-1.5 rounded-xl">
+                        <span class="text-xs text-red-300 font-bold mr-1">NYAWA:</span>
+                        <div id="hudLives" class="flex gap-1 text-red-500 text-base">
+                            <i class="fa-solid fa-heart"></i>
+                            <i class="fa-solid fa-heart"></i>
+                            <i class="fa-solid fa-heart"></i>
+                        </div>
+                    </div>
+
+                    <!-- Timer -->
+                    <div class="flex items-center gap-1.5 bg-amber-950/40 border border-amber-700/50 px-3 py-1.5 rounded-xl">
+                        <i class="fa-solid fa-clock text-amber-400 text-sm"></i>
+                        <span id="hudTimer" class="text-sm font-bold text-amber-300 font-mono">10:00</span>
+                    </div>
+
+                    <!-- Score -->
+                    <div class="flex items-center gap-1.5 bg-emerald-950/40 border border-emerald-700/50 px-3 py-1.5 rounded-xl">
+                        <i class="fa-solid fa-trophy text-emerald-400 text-sm"></i>
+                        <span id="hudScore" class="text-sm font-bold text-emerald-300">0 M</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANVAS AND SIDE PANEL WRAPPER -->
+            <div class="w-full flex flex-col md:flex-row gap-4 items-center justify-center">
+                <!-- MAZE CANVAS -->
+                <div class="relative w-full max-w-[600px] aspect-square flex justify-center items-center">
+                    <canvas id="gameCanvas" width="600" height="600" class="w-full h-full border-2 border-indigo-500/40 shadow-2xl"></canvas>
+                </div>
+
+                <!-- MOBILE / ON-SCREEN CONTROLS & OBJECTIVES -->
+                <div class="w-full md:w-64 flex flex-col justify-between items-center gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                    <div class="w-full text-center">
+                        <h3 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Stesen Matlamat</h3>
+                        <div class="text-left space-y-1.5 text-xs text-slate-300">
+                            <div id="stn-1" class="p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700">
+                                <span>🌲</span> <span>1. Hutan Nombor</span>
+                            </div>
+                            <div id="stn-2" class="p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700">
+                                <span>💎</span> <span>2. Gua Pecahan</span>
+                            </div>
+                            <div id="stn-3" class="p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700">
+                                <span>🏰</span> <span>3. Istana Algebra</span>
+                            </div>
+                            <div id="stn-4" class="p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700">
+                                <span>🌉</span> <span>4. Jambatan Geometri</span>
+                            </div>
+                            <div id="stn-5" class="p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700">
+                                <span>🗼</span> <span>5. Menara Data</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TOUCH ARROW CONTROLS FOR MOBILE/TABLET -->
+                    <div class="w-full text-center">
+                        <p class="text-[10px] text-slate-400 mb-2">Kawalan Sentuhan / Papan Kekunci</p>
+                        <div class="grid grid-cols-3 gap-2 w-44 mx-auto">
+                            <div></div>
+                            <button onclick="movePlayer(0, -1)" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xl font-bold flex items-center justify-center shadow-lg border border-indigo-400">
+                                <i class="fa-solid fa-arrow-up"></i>
+                            </button>
+                            <div></div>
+                            <button onclick="movePlayer(-1, 0)" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xl font-bold flex items-center justify-center shadow-lg border border-indigo-400">
+                                <i class="fa-solid fa-arrow-left"></i>
+                            </button>
+                            <button onclick="movePlayer(0, 1)" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xl font-bold flex items-center justify-center shadow-lg border border-indigo-400">
+                                <i class="fa-solid fa-arrow-down"></i>
+                            </button>
+                            <button onclick="movePlayer(1, 0)" class="w-12 h-12 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xl font-bold flex items-center justify-center shadow-lg border border-indigo-400">
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL 1: QUESTION POPUP -->
+    <div id="modalQuestion" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-slate-900 border-2 border-amber-400/80 w-full max-w-lg rounded-3xl p-6 shadow-2xl modal-animate text-slate-100 relative">
+            <!-- Station Title -->
+            <div class="flex items-center gap-3 mb-4 border-b border-slate-800 pb-3">
+                <div id="qStationIcon" class="text-3xl p-2 bg-amber-500/20 rounded-2xl border border-amber-500/40">🌲</div>
+                <div>
+                    <span id="qStationLevel" class="text-xs font-semibold text-amber-400 uppercase tracking-widest">Stesen 1</span>
+                    <h3 id="qStationTitle" class="text-xl font-bold text-white">Hutan Nombor</h3>
+                </div>
+            </div>
+
+            <!-- Question Body -->
+            <div class="mb-6">
+                <div class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase mb-2 bg-indigo-900/80 text-indigo-300 border border-indigo-700" id="qDifficultyTag">Sederhana</div>
+                <p id="qText" class="text-base sm:text-lg font-semibold text-slate-200 leading-relaxed">Soalan sedang dimuatkan...</p>
+            </div>
+
+            <!-- Options Grid -->
+            <div id="qOptionsContainer" class="grid grid-cols-1 gap-3 mb-4">
+                <!-- Dynamic Buttons generated via JS -->
+            </div>
+
+            <!-- Answer Feedback Banner -->
+            <div id="qFeedback" class="hidden p-3 rounded-xl text-center text-sm font-bold animate-pulse"></div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: GAME OVER / VICTORY SUMMARY -->
+    <div id="modalEndGame" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-slate-900 border-2 border-indigo-500 w-full max-w-md rounded-3xl p-6 sm:p-8 text-center shadow-2xl modal-animate">
+            <div id="endGameIcon" class="text-6xl mb-3">🎉</div>
+            <h2 id="endGameTitle" class="text-2xl sm:text-3xl font-extrabold text-amber-300 mb-1">TAHNIAH!</h2>
+            <p id="endGameSubtitle" class="text-xs text-slate-400 mb-6">Anda telah berjaya menamatkan pengembaraan!</p>
+
+            <div class="bg-slate-800/80 rounded-2xl p-4 border border-slate-700 space-y-3 mb-6 text-sm">
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>Jumlah Markah:</span>
+                    <span id="endScore" class="font-bold text-emerald-400 text-base">0 M</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>Masa Diambil:</span>
+                    <span id="endTime" class="font-bold text-amber-300 font-mono">00:00</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>Baki Nyawa:</span>
+                    <span id="endLives" class="font-bold text-red-400">3 / 3</span>
+                </div>
+                <div class="flex justify-between items-center text-slate-300">
+                    <span>Status Rekod:</span>
+                    <span id="endStatus" class="font-bold text-indigo-400">Menang</span>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="resetToHome()" class="w-full py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold rounded-xl text-sm transition shadow-lg">
+                    <i class="fa-solid fa-rotate-right"></i> Main Semula
+                </button>
+                <button onclick="openTeacherDashboard()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-sm transition border border-amber-500/30">
+                    <i class="fa-solid fa-list-check"></i> Rekod Guru
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 3: TEACHER DASHBOARD & LEADERBOARD -->
+    <div id="modalTeacher" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex justify-center items-center p-3 sm:p-6">
+        <div class="bg-slate-900 border border-indigo-500/50 w-full max-w-4xl h-[90vh] rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col modal-animate">
+            
+            <!-- Dashboard Header -->
+            <div class="flex flex-wrap justify-between items-center gap-3 pb-4 border-b border-slate-800">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-chalkboard-user"></i> Dashboard Rekod & Kedudukan Pemain
+                    </h2>
+                    <p class="text-xs text-slate-400">Pantau keputusan dan prestasi murid bagi Math Maze Adventure.</p>
+                </div>
+                <button onclick="toggleTeacherDashboard(false)" class="text-slate-400 hover:text-white text-xl p-2 rounded-xl bg-slate-800">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 my-4">
+                <div>
+                    <label class="block text-[10px] text-indigo-300 font-bold mb-1">TAPIS TINGKATAN</label>
+                    <select id="filterForm" onchange="renderTeacherRecords()" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
+                        <option value="ALL">Semua Tingkatan</option>
+                        <option value="Tingkatan 1">Tingkatan 1</option>
+                        <option value="Tingkatan 2">Tingkatan 2</option>
+                        <option value="Tingkatan 3">Tingkatan 3</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-indigo-300 font-bold mb-1">CARI KELAS / NAMA</label>
+                    <input type="text" id="filterSearch" onkeyup="renderTeacherRecords()" placeholder="Cth: Ibnu Sina..." class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
+                </div>
+                <div>
+                    <label class="block text-[10px] text-indigo-300 font-bold mb-1">TETAPAN MASA PERMAINAN (MINIT)</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="inputCustomTimer" value="10" min="1" max="60" class="w-full py-2 px-3 bg-slate-800 border border-slate-700 rounded-xl text-xs text-white">
+                        <button onclick="updateGlobalTimerSetting()" class="px-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition">
+                            Simpan
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="flex-grow overflow-auto border border-slate-800 rounded-2xl bg-slate-950/50">
+                <table class="w-full text-left text-xs text-slate-300">
+                    <thead class="bg-slate-800/90 text-amber-300 font-bold uppercase sticky top-0 border-b border-slate-700">
+                        <tr>
+                            <th class="p-3">Ked.</th>
+                            <th class="p-3">Nama Pemain</th>
+                            <th class="p-3">Tingkatan</th>
+                            <th class="p-3">Kelas</th>
+                            <th class="p-3">Markah</th>
+                            <th class="p-3">Masa</th>
+                            <th class="p-3">Baki Nyawa</th>
+                            <th class="p-3">Status</th>
+                            <th class="p-3">Tarikh & Masa</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherTableBody" class="divide-y divide-slate-800/60">
+                        <!-- Dynamic Records -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Google Apps Script Deployment Code Guide Toggle -->
+            <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs">
+                <span class="text-slate-400">Pautan Google Sheets Active ID: <span class="text-emerald-400 font-mono">Disambungkan (Live GAS Bridge)</span></span>
+                <button onclick="toggleGASGuideModal(true)" class="text-indigo-400 hover:underline">
+                    <i class="fa-solid fa-code"></i> Panduan Kod Code.gs & Google Sheets
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 4: GAS DEVELOPER & SETUP GUIDE -->
+    <div id="modalGASGuide" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-slate-900 border border-indigo-500/50 w-full max-w-3xl h-[85vh] rounded-3xl p-6 shadow-2xl flex flex-col modal-animate text-slate-200">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-amber-300"><i class="fa-solid fa-file-code"></i> Panduan Pemasangan Google Apps Script (GAS)</h3>
+                <button onclick="toggleGASGuideModal(false)" class="text-slate-400 hover:text-white text-xl">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="flex-grow overflow-auto my-4 space-y-4 text-xs leading-relaxed text-slate-300 pr-2">
+                <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-800/50">
+                    <h4 class="font-bold text-amber-400 text-sm mb-1">Langkah 1: Sediakan Google Sheets</h4>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Buka Google Sheets baharu. Namakan sebagai <strong>"Rekod Math Maze Adventure"</strong>.</li>
+                        <li>Di Lembaran 1 (Sheet1), cipta baris tajuk (Header) berikut pada baris pertama:
+                            <br><code class="text-emerald-300 bg-slate-950 px-2 py-1 rounded inline-block mt-1">Nama | Tingkatan | Kelas | Markah | Tempoh Masa | Baki Nyawa | Status | Tarikh & Masa</code>
+                        </li>
+                    </ol>
+                </div>
+
+                <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-800/50">
+                    <h4 class="font-bold text-amber-400 text-sm mb-1">Langkah 2: Tambah Kod Apps Script (`Code.gs`)</h4>
+                    <p class="mb-2">Klik <strong>Extensions > Apps Script</strong> pada Google Sheets anda, padam semua kod sedia ada dan tampal kod Apps Script di bawah:</p>
+                    
+                    <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-indigo-300 font-mono text-[11px] overflow-x-auto">
+// ==========================================
+// CODE.GS - GOOGLE APPS SCRIPT BACKEND
+// ==========================================
+
+function doGet() {
+  return HtmlService.createTemplateFromFile('Index')
+    .evaluate()
+    .setTitle('Math Maze Adventure')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+}
+
+// Menyimpan Rekod Murid Ke Google Sheets
+function saveGameRecord(record) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.appendRow([
+      record.name,
+      record.form,
+      record.className,
+      record.score,
+      record.timeTaken,
+      record.livesLeft,
+      record.status,
+      new Date().toLocaleString('ms-MY')
+    ]);
+    return { status: "SUCCESS", message: "Rekod berjaya disimpan!" };
+  } catch (error) {
+    return { status: "ERROR", message: error.toString() };
+  }
+}
+
+// Mengambil Semua Rekod Untuk Paparan Guru
+function getGameRecords() {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+    data.shift(); // Buang header row
+    return data;
+  } catch(e) {
+    return [];
+  }
+}
+                    </pre>
+                </div>
+
+                <div class="bg-indigo-950/40 p-4 rounded-xl border border-indigo-800/50">
+                    <h4 class="font-bold text-amber-400 text-sm mb-1">Langkah 3: Terbitkan sebagai Web App</h4>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Klik butang <strong>Deploy > New Deployment</strong>.</li>
+                        <li>Pilih jenis deployment: <strong>Web App</strong>.</li>
+                        <li>Execute as: <strong>Me (Akaun Guru)</strong>.</li>
+                        <li>Who has access: <strong>Anyone (Sesiapa sahaja)</strong>.</li>
+                        <li>Klik <strong>Deploy</strong> dan salin pautan URL Web App yang dihasilkan untuk diberikan kepada murid.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 5: USER INSTRUCTIONS / GUIDE -->
+    <div id="modalGuide" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex justify-center items-center p-4">
+        <div class="bg-slate-900 border border-indigo-500/50 w-full max-w-md rounded-3xl p-6 shadow-2xl modal-animate text-slate-200">
+            <h3 class="text-xl font-bold text-amber-300 mb-3 flex items-center gap-2">
+                <i class="fa-solid fa-gamepad"></i> Panduan Permainan
+            </h3>
+            <ul class="space-y-2 text-xs text-slate-300 leading-relaxed mb-6">
+                <li class="flex items-start gap-2">
+                    <span class="text-amber-400 font-bold">1.</span>
+                    <span>Gunakan <strong>Papan Kekunci (Arrow Keys)</strong> atau <strong>Butang Sentuhan Screen</strong> untuk menggerakkan watak.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-amber-400 font-bold">2.</span>
+                    <span>Terdapat <strong>5 Stesen Matematik</strong> yang wajib dilawati secara berurutan.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-amber-400 font-bold">3.</span>
+                    <span>Jawapan **Betul**: +10 Markah & terus mara ke stesen seterusnya.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-amber-400 font-bold">4.</span>
+                    <span>Jawapan **Salah**: -1 Nyawa & watak akan dianjakkan berundur ke stesen sebelumnya.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-amber-400 font-bold">5.</span>
+                    <span>Sampai ke Pintu Destinasi (🏁) sebelum pemasa 10 minit tamat untuk mendapat <strong>Bonus +20 Markah</strong>!</span>
+                </li>
+            </ul>
+            <button onclick="toggleGuideModal(false)" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs">
+                Faham & Tutup
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO EFFECTS (SYNTHESIZED SOUND VIA TONE/AUDIO API) -->
+    <script>
+        // Simple Web Audio API Synthesizer for Retro Sounds
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playSound(type) {
+            try {
+                if (!audioCtx) audioCtx = new AudioCtx();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+
+                if (type === 'correct') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.25); // A2
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'win') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(554.37, now + 0.1);
+                    osc.frequency.setValueAtTime(659.25, now + 0.2);
+                    osc.frequency.setValueAtTime(880, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
+                    osc.start(now);
+                    osc.stop(now + 0.6);
+                }
+            } catch (e) {
+                console.log("Audio play blocked or unavailable");
+            }
+        }
+    </script>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================================================
+           1. DATA BANK SOALAN KSSM MATEMATIK TINGKATAN 1, 2 & 3
+           ========================================================================== */
+        const QUESTION_BANK = {
+            "Tingkatan 1": [
+                // Stesen 1: Hutan Nombor
+                { station: 1, text: "Nilaikan: -8 + (-5) - (-12)", options: ["-1", "1", "-25", "15"], answer: 0, diff: "Mudah" },
+                { station: 1, text: "Cari gandaan sepunya terkecil (GSTK) bagi 4 dan 6.", options: ["12", "24", "2", "18"], answer: 0, diff: "Sederhana" },
+                
+                // Stesen 2: Gua Pecahan
+                { station: 2, text: "Tukarkan 0.35 kepada pecahan dalam bentuk termudah.", options: ["7/20", "35/100", "7/10", "3/5"], answer: 0, diff: "Mudah" },
+                { station: 2, text: "Hitung 2/5 + 1/4 - 1/2 dalam bentuk pecahan.", options: ["3/20", "7/20", "1/10", "4/5"], answer: 0, diff: "Sederhana" },
+
+                // Stesen 3: Istana Algebra
+                { station: 3, text: "Permudahkan ungkapan: 3x + 5y - x + 2y", options: ["2x + 7y", "4x + 7y", "2x + 3y", "5x + 7y"], answer: 0, diff: "Mudah" },
+                { station: 3, text: "Selesaikan persamaan linear: 2p - 4 = 10", options: ["p = 7", "p = 3", "p = 14", "p = 5"], answer: 0, diff: "Sederhana" },
+
+                // Stesen 4: Jambatan Geometri
+                { station: 4, text: "Hitung luas segi tiga dengan tapak 8 cm dan tinggi 5 cm.", options: ["20 cm²", "40 cm²", "26 cm²", "13 cm²"], answer: 0, diff: "Mudah" },
+                { station: 4, text: "Jika sudut pada garis lurus ialah 180°, cari nilai x jika sudut bersebelahan ialah 115°.", options: ["65°", "75°", "85°", "95°"], answer: 0, diff: "Mudah" },
+
+                // Stesen 5: Menara Data
+                { station: 5, text: "Cari min bagi set data: 4, 7, 8, 5, 6", options: ["6", "5.5", "7", "30"], answer: 0, diff: "Sederhana" },
+                { station: 5, text: "Sebiji dadu adil dilambung. Apakah kebarangkalian mendapat nombor genap?", options: ["1/2", "1/3", "1/6", "2/3"], answer: 0, diff: "Mudah" }
+            ],
+            "Tingkatan 2": [
+                // Stesen 1: Hutan Nombor
+                { station: 1, text: "Nyatakan dua sebutan seterusnya bagi jujukan nombor: 3, 7, 11, 15, ...", options: ["19, 23", "18, 22", "16, 20", "19, 24"], answer: 0, diff: "Mudah" },
+                
+                // Stesen 2: Gua Pecahan
+                { station: 2, text: "Hitung faedah mudah bagi simpanan RM2000 pada kadar 3% setahun selama 2 tahun.", options: ["RM120", "RM60", "RM2120", "RM150"], answer: 0, diff: "Sederhana" },
+
+                // Stesen 3: Istana Algebra
+                { station: 3, text: "Kembangkan ungkapan: (x + 3)(x - 2)", options: ["x² + x - 6", "x² - x - 6", "x² + 5x - 6", "x² + 6"], answer: 0, diff: "Sederhana" },
+                { station: 3, text: "Faktorkan sepenuhnya: 4x - 12", options: ["4(x - 3)", "2(2x - 6)", "4(x + 3)", "x(4 - 12)"], answer: 0, diff: "Mudah" },
+
+                // Stesen 4: Jambatan Geometri
+                { station: 4, text: "Dengan menggunakan Teorem Pythagoras, cari hipotenus bagi segi tiga bersudut tegak 6 cm dan 8 cm.", options: ["10 cm", "14 cm", "12 cm", "100 cm"], answer: 0, diff: "Mudah" },
+                { station: 4, text: "Hitung lilitan bulatan yang mempunyai jejari 7 cm. (Guna π = 22/7)", options: ["44 cm", "154 cm", "22 cm", "88 cm"], answer: 0, diff: "Sederhana" },
+
+                // Stesen 5: Menara Data
+                { station: 5, text: "Cari median bagi set data berikut: 12, 15, 11, 19, 14", options: ["14", "15", "12", "14.2"], answer: 0, diff: "Sederhana" }
+            ],
+            "Tingkatan 3": [
+                // Stesen 1: Hutan Nombor
+                { station: 1, text: "Permudahkan: (a³ × a⁴) ÷ a²", options: ["a⁵", "a⁹", "a⁶", "a⁵/2"], answer: 0, diff: "Sederhana" },
+                { station: 1, text: "Ungkapkan 0.000456 dalam bentuk piawai.", options: ["4.56 × 10⁻⁴", "4.56 × 10⁻³", "45.6 × 10⁻⁵", "4.56 × 10⁴"], answer: 0, diff: "Mudah" },
+
+                // Stesen 2: Gua Pecahan
+                { station: 2, text: "Cari nilai bagi (64)^(2/3).", options: ["16", "8", "32", "4"], answer: 0, diff: "Mencabar" },
+
+                // Stesen 3: Istana Algebra
+                { station: 3, text: "Cari kecerunan (m) bagi garis lurus yang lalu pada titik (2, 3) dan (4, 7).", options: ["2", "1/2", "4", "3"], answer: 0, diff: "Sederhana" },
+
+                // Stesen 4: Jambatan Geometri
+                { station: 4, text: "Dalam segi tiga bersudut tegak, jika sin θ = 3/5, apakah nilai kos θ?", options: ["4/5", "3/4", "5/3", "4/3"], answer: 0, diff: "Mencabar" },
+
+                // Stesen 5: Menara Data
+                { station: 5, text: "Sebuah beg mengandungi 3 bola merah dan 7 bola biru. Sebiji bola dipilih secara rawak. Cari kebarangkalian mendapat bola merah.", options: ["3/10", "7/10", "1/3", "3/7"], answer: 0, diff: "Mudah" }
+            ]
+        };
+
+        /* ==========================================================================
+           2. GLOBAL GAME STATE VARIABLES
+           ========================================================================== */
+        let player = {
+            name: '',
+            form: 'Tingkatan 1',
+            className: '',
+            avatar: '🧙‍♂️',
+            gridX: 1,
+            gridY: 1,
+            score: 0,
+            lives: 3,
+            currentStationVisited: 0
+        };
+
+        let gameTimer = {
+            totalSeconds: 600, // Default 10 minit
+            remainingSeconds: 600,
+            intervalId: null,
+            isPaused: false
+        };
+
+        // Grid Configuration (15x15 Maze Grid)
+        const GRID_SIZE = 15;
+        let CELL_SIZE = 40; // Calculated dynamically on canvas render
+
+        /*
+           0 = Laluan Kosong (Path)
+           1 = Dinding (Wall)
+           2 = Stesen 1 (Hutan Nombor)
+           3 = Stesen 2 (Gua Pecahan)
+           4 = Stesen 3 (Istana Algebra)
+           5 = Stesen 4 (Jambatan Geometri)
+           6 = Stesen 5 (Menara Data)
+           9 = Destinasi Penamat (Finish Gate)
+        */
+        const MAZE_MAP = [
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+            [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 1],
+            [1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+            [1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0, 1, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+            [1, 4, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1],
+            [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1],
+            [1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+            [1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1],
+            [1, 0, 0, 0, 0, 0, 5, 0, 1, 0, 0, 0, 0, 6, 1],
+            [1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1],
+            [1, 9, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+        ];
+
+        // Coordinate Backups for Stations (To push player back on wrong answer)
+        const STATION_COORDS = {
+            0: { x: 1, y: 1 },   // Mula
+            1: { x: 13, y: 1 },  // Stesen 1
+            2: { x: 10, y: 3 },  // Stesen 2
+            3: { x: 1, y: 7 },   // Stesen 3
+            4: { x: 6, y: 11 },  // Stesen 4
+            5: { x: 13, y: 11 }  // Stesen 5
+        };
+
+        // Simulated Storage for Records (Syncs with Google Apps Script mock)
+        let teacherStorageRecords = [
+            { name: "Siti Nurhaliza", form: "Tingkatan 1", className: "1 Bestari", score: 70, timeTaken: "04:25", livesLeft: 3, status: "Menang", date: "03/11/2026, 10:15:00" },
+            { name: "Muhammad Adam", form: "Tingkatan 2", className: "2 Cendekia", score: 40, timeTaken: "07:10", livesLeft: 1, status: "Menang", date: "03/11/2026, 11:30:00" },
+            { name: "Lee Chee Keong", form: "Tingkatan 3", className: "3 Ibnu Sina", score: 20, timeTaken: "10:00", livesLeft: 0, status: "Gagal (Masa Tamat)", date: "03/11/2026, 12:05:00" }
+        ];
+
+        let canvas, ctx;
+        let activeQuestionObj = null;
+
+        /* ==========================================================================
+           3. INITIALIZATION & GAMEPLAY LOGIC
+           ========================================================================== */
+        window.onload = function() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+            
+            // Adjust Canvas Size Responsively
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Setup Keyboard Controls
+            window.addEventListener('keydown', handleKeyPress);
+        };
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const size = Math.min(container.clientWidth, 600);
+            canvas.width = size;
+            canvas.height = size;
+            CELL_SIZE = size / GRID_SIZE;
+            drawMaze();
+        }
+
+        function startGame() {
+            player.name = document.getElementById('inputName').value.trim();
+            player.form = document.getElementById('inputForm').value;
+            player.className = document.getElementById('inputClass').value.trim();
+            
+            const selectedAvatar = document.querySelector('input[name="avatar"]:checked');
+            player.avatar = selectedAvatar ? selectedAvatar.value : '🧙‍♂️';
+
+            player.gridX = 1;
+            player.gridY = 1;
+            player.score = 0;
+            player.lives = 3;
+            player.currentStationVisited = 0;
+
+            // HUD UI Update
+            document.getElementById('hudPlayerName').innerText = player.name;
+            document.getElementById('hudPlayerForm').innerText = player.form + " (" + player.className + ")";
+            updateHUD();
+
+            // Switch Screen
+            document.getElementById('screenRegistration').classList.add('hidden');
+            document.getElementById('screenGameplay').classList.remove('hidden');
+            document.getElementById('screenGameplay').classList.add('flex');
+
+            // Reset Timer
+            startTimer();
+
+            // Draw Maze
+            resizeCanvas();
+        }
+
+        /* ==========================================================================
+           4. MAZE RENDERING ENGINE (CANVAS 2D)
+           ========================================================================== */
+        function drawMaze() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let r = 0; r < GRID_SIZE; r++) {
+                for (let c = 0; c < GRID_SIZE; c++) {
+                    const cellType = MAZE_MAP[r][c];
+                    const x = c * CELL_SIZE;
+                    const y = r * CELL_SIZE;
+
+                    // Draw Background Base Tile
+                    ctx.fillStyle = '#1e293b';
+                    ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+
+                    // Draw Elements
+                    if (cellType === 1) {
+                        // Wall
+                        ctx.fillStyle = '#334155';
+                        ctx.fillRect(x + 1, y + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+                        ctx.fillStyle = '#475569';
+                        ctx.fillRect(x + 3, y + 3, CELL_SIZE - 6, CELL_SIZE - 6);
+                    } else if (cellType >= 2 && cellType <= 6) {
+                        // Stations
+                        ctx.fillStyle = '#312e81';
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+
+                        // Station Icons
+                        ctx.font = `${CELL_SIZE * 0.55}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        let stnIcon = '🌲';
+                        if (cellType === 3) stnIcon = '💎';
+                        if (cellType === 4) stnIcon = '🏰';
+                        if (cellType === 5) stnIcon = '🌉';
+                        if (cellType === 6) stnIcon = '🗼';
+
+                        ctx.fillText(stnIcon, x + CELL_SIZE / 2, y + CELL_SIZE / 2);
+                    } else if (cellType === 9) {
+                        // Finish Gate
+                        ctx.fillStyle = '#065f46';
+                        ctx.fillRect(x, y, CELL_SIZE, CELL_SIZE);
+                        ctx.font = `${CELL_SIZE * 0.6}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText('🏁', x + CELL_SIZE / 2, y + CELL_SIZE / 2);
+                    }
+
+                    // Grid subtle borders
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+                    ctx.strokeRect(x, y, CELL_SIZE, CELL_SIZE);
+                }
+            }
+
+            // Draw Player Avatar
+            const px = player.gridX * CELL_SIZE + CELL_SIZE / 2;
+            const py = player.gridY * CELL_SIZE + CELL_SIZE / 2;
+            
+            // Glowing Player Aura
+            ctx.shadowColor = '#f59e0b';
+            ctx.shadowBlur = 10;
+            ctx.font = `${CELL_SIZE * 0.7}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(player.avatar, px, py);
+            ctx.shadowBlur = 0; // Reset Shadow
+        }
+
+        /* ==========================================================================
+           5. CONTROLS & MOVEMENT CONTROLLER
+           ========================================================================== */
+        function handleKeyPress(e) {
+            if (gameTimer.isPaused || player.lives <= 0) return;
+
+            if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') movePlayer(0, -1);
+            if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') movePlayer(0, 1);
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') movePlayer(-1, 0);
+            if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') movePlayer(1, 0);
+        }
+
+        function movePlayer(dx, dy) {
+            if (gameTimer.isPaused || player.lives <= 0) return;
+
+            const newX = player.gridX + dx;
+            const newY = player.gridY + dy;
+
+            // Check Boundary & Walls
+            if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                const targetTile = MAZE_MAP[newY][newX];
+
+                if (targetTile !== 1) { // 1 = Wall
+                    player.gridX = newX;
+                    player.gridY = newY;
+                    drawMaze();
+                    checkTileTrigger(targetTile);
+                }
+            }
+        }
+
+        function checkTileTrigger(tileType) {
+            // Check if stepped on a station
+            if (tileType >= 2 && tileType <= 6) {
+                const stationNum = tileType - 1; // 2 -> Stesen 1, 3 -> Stesen 2...
+
+                // Enforce Sequential Order (Player cannot skip stations)
+                if (stationNum === player.currentStationVisited + 1) {
+                    triggerQuestionModal(stationNum);
+                } else if (stationNum > player.currentStationVisited + 1) {
+                    // Alert player to go back to order
+                    showTemporaryNotice(`Sila jawab Stesen ${player.currentStationVisited + 1} dahulu!`);
+                }
+            } else if (tileType === 9) {
+                // Finish Gate
+                if (player.currentStationVisited >= 5) {
+                    triggerGameEnd(true, "Berjaya menamatkan semua stesen!");
+                } else {
+                    showTemporaryNotice("Selesaikan semua 5 stesen terlebih dahulu!");
+                }
+            }
+        }
+
+        function showTemporaryNotice(msg) {
+            const hud = document.getElementById('hudPlayerName');
+            const originalText = hud.innerText;
+            hud.innerText = msg;
+            hud.classList.add('text-amber-400');
+            setTimeout(() => {
+                hud.innerText = originalText;
+                hud.classList.remove('text-amber-400');
+            }, 2500);
+        }
+
+        /* ==========================================================================
+           6. QUESTION SYSTEM & VERIFICATION
+           ========================================================================== */
+        function triggerQuestionModal(stationNum) {
+            gameTimer.isPaused = true; // Pause timer while answering
+
+            const formQuestions = QUESTION_BANK[player.form] || QUESTION_BANK["Tingkatan 1"];
+            const stationQuestions = formQuestions.filter(q => q.station === stationNum);
+            
+            // Randomly pick one question for this station
+            const randomQ = stationQuestions[Math.floor(Math.random() * stationQuestions.length)] || stationQuestions[0];
+            activeQuestionObj = { ...randomQ, stationNum: stationNum };
+
+            // Update UI Elements in Question Modal
+            const stationNames = ["", "Hutan Nombor", "Gua Pecahan", "Istana Algebra", "Jambatan Geometri", "Menara Data"];
+            const stationIcons = ["", "🌲", "💎", "🏰", "🌉", "🗼"];
+
+            document.getElementById('qStationIcon').innerText = stationIcons[stationNum];
+            document.getElementById('qStationLevel').innerText = `STESEN ${stationNum}`;
+            document.getElementById('qStationTitle').innerText = stationNames[stationNum];
+            document.getElementById('qDifficultyTag').innerText = activeQuestionObj.diff || "Sederhana";
+            document.getElementById('qText').innerText = activeQuestionObj.text;
+
+            // Generate Option Buttons
+            const optContainer = document.getElementById('qOptionsContainer');
+            optContainer.innerHTML = '';
+
+            activeQuestionObj.options.forEach((optText, index) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3.5 bg-slate-800 hover:bg-indigo-900/60 border border-slate-700 hover:border-indigo-400 rounded-xl text-sm font-semibold transition flex items-center justify-between";
+                btn.innerHTML = `<span><strong class="text-amber-400 mr-2">${String.fromCharCode(65 + index)}.</strong> ${optText}</span> <i class="fa-regular fa-circle text-slate-500"></i>`;
+                btn.onclick = () => submitAnswer(index);
+                optContainer.appendChild(btn);
+            });
+
+            document.getElementById('qFeedback').classList.add('hidden');
+            document.getElementById('modalQuestion').classList.remove('hidden');
+        }
+
+        function submitAnswer(selectedIndex) {
+            const feedbackEl = document.getElementById('qFeedback');
+            feedbackEl.classList.remove('hidden');
+
+            const isCorrect = (selectedIndex === activeQuestionObj.answer);
+
+            if (isCorrect) {
+                playSound('correct');
+                feedbackEl.className = "p-3 rounded-xl text-center text-sm font-bold bg-emerald-950 border border-emerald-500 text-emerald-300 mb-2";
+                feedbackEl.innerText = "✨ JAWAPAN BETUL! +10 MARKAH";
+                
+                player.score += 10;
+                player.currentStationVisited = activeQuestionObj.stationNum;
+
+                // Highlight completed station in side list
+                const stnTag = document.getElementById(`stn-${activeQuestionObj.stationNum}`);
+                if (stnTag) {
+                    stnTag.classList.add('bg-emerald-950', 'border-emerald-500', 'text-emerald-300');
+                }
+
+                updateHUD();
+
+                setTimeout(() => {
+                    document.getElementById('modalQuestion').classList.add('hidden');
+                    gameTimer.isPaused = false;
+                }, 1200);
+
+            } else {
+                playSound('wrong');
+                feedbackEl.className = "p-3 rounded-xl text-center text-sm font-bold bg-red-950 border border-red-500 text-red-300 mb-2";
+                feedbackEl.innerText = "❌ JAWAPAN SALAH! NYAWA BERKURANG";
+
+                player.lives -= 1;
+                updateHUD();
+
+                // Reposition character back to previous station/start
+                const prevCoords = STATION_COORDS[player.currentStationVisited];
+                player.gridX = prevCoords.x;
+                player.gridY = prevCoords.y;
+                drawMaze();
+
+                setTimeout(() => {
+                    document.getElementById('modalQuestion').classList.add('hidden');
+                    gameTimer.isPaused = false;
+
+                    if (player.lives <= 0) {
+                        triggerGameEnd(false, "Misi gagal! Nyawa anda telah habis.");
+                    }
+                }, 1400);
+            }
+        }
+
+        /* ==========================================================================
+           7. TIMER & HUD CONTROLLER
+           ========================================================================== */
+        function startTimer() {
+            if (gameTimer.intervalId) clearInterval(gameTimer.intervalId);
+            gameTimer.remainingSeconds = gameTimer.totalSeconds;
+            gameTimer.isPaused = false;
+
+            gameTimer.intervalId = setInterval(() => {
+                if (!gameTimer.isPaused) {
+                    gameTimer.remainingSeconds--;
+
+                    // Update UI Timer
+                    const mins = Math.floor(gameTimer.remainingSeconds / 60);
+                    const secs = gameTimer.remainingSeconds % 60;
+                    document.getElementById('hudTimer').innerText = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                    if (gameTimer.remainingSeconds <= 0) {
+                        clearInterval(gameTimer.intervalId);
+                        triggerGameEnd(false, "Misi gagal! Masa 10 minit telah tamat.");
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateHUD() {
+            document.getElementById('hudScore').innerText = `${player.score} M`;
+            
+            // Render Hearts
+            const livesContainer = document.getElementById('hudLives');
+            livesContainer.innerHTML = '';
+            for (let i = 0; i < 3; i++) {
+                if (i < player.lives) {
+                    livesContainer.innerHTML += `<i class="fa-solid fa-heart text-red-500"></i>`;
+                } else {
+                    livesContainer.innerHTML += `<i class="fa-regular fa-heart text-slate-600"></i>`;
+                }
+            }
+        }
+
+        /* ==========================================================================
+           8. END GAME & GOOGLE APPS SCRIPT INTEGRATION
+           ========================================================================== */
+        function triggerGameEnd(isWin, reason) {
+            clearInterval(gameTimer.intervalId);
+            gameTimer.isPaused = true;
+
+            if (isWin) {
+                playSound('win');
+                player.score += 20; // Destination Bonus
+            }
+
+            const timeSpentSeconds = gameTimer.totalSeconds - gameTimer.remainingSeconds;
+            const spentMins = Math.floor(timeSpentSeconds / 60);
+            const spentSecs = timeSpentSeconds % 60;
+            const timeTakenFormatted = `${spentMins.toString().padStart(2, '0')}:${spentSecs.toString().padStart(2, '0')}`;
+
+            // Populate Victory / Defeat Modal
+            document.getElementById('endGameIcon').innerText = isWin ? '🏆' : '💀';
+            document.getElementById('endGameTitle').innerText = isWin ? 'TAHNIAH! MENANG!' : 'MISI GAGAL!';
+            document.getElementById('endGameTitle').className = isWin ? 'text-2xl sm:text-3xl font-extrabold text-amber-300 mb-1' : 'text-2xl sm:text-3xl font-extrabold text-red-400 mb-1';
+            document.getElementById('endGameSubtitle').innerText = reason;
+            document.getElementById('endScore').innerText = `${player.score} Markah`;
+            document.getElementById('endTime').innerText = timeTakenFormatted;
+            document.getElementById('endLives').innerText = `${player.lives} / 3`;
+            document.getElementById('endStatus').innerText = isWin ? 'MENANG' : 'GAGAL';
+
+            document.getElementById('modalEndGame').classList.remove('hidden');
+
+            // Save Data to Server / Local Mock
+            saveRecordToGoogleSheets({
+                name: player.name,
+                form: player.form,
+                className: player.className,
+                score: player.score,
+                timeTaken: timeTakenFormatted,
+                livesLeft: player.lives,
+                status: isWin ? 'Menang' : 'Gagal',
+                date: new Date().toLocaleString('ms-MY')
+            });
+        }
+
+        function saveRecordToGoogleSheets(recordObj) {
+            // Google Apps Script HTML Bridge Integration
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        console.log("GAS Record Saved:", response);
+                    })
+                    .saveGameRecord(recordObj);
+            } else {
+                // Fallback Mock Storage for Standalone Live Preview
+                console.warn("Google Apps Script Bridge is inactive. Using Local Memory storage.");
+                teacherStorageRecords.unshift(recordObj);
+            }
+        }
+
+        function resetToHome() {
+            document.getElementById('modalEndGame').classList.add('hidden');
+            document.getElementById('screenGameplay').classList.add('hidden');
+            document.getElementById('screenGameplay').classList.remove('flex');
+            document.getElementById('screenRegistration').classList.remove('hidden');
+
+            // Reset Station Tags
+            for (let i = 1; i <= 5; i++) {
+                const tag = document.getElementById(`stn-${i}`);
+                if (tag) tag.className = 'p-1.5 bg-slate-800/80 rounded-lg flex items-center gap-2 border border-slate-700';
+            }
+        }
+
+        /* ==========================================================================
+           9. TEACHER DASHBOARD & LEADERBOARD CONTROLLER
+           ========================================================================== */
+        function openTeacherDashboard() {
+            // Fetch Latest Data if in Apps Script Mode
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(data) {
+                        if (data && Array.isArray(data)) {
+                            // Convert GAS array format to JSON Objects
+                            teacherStorageRecords = data.map(row => ({
+                                name: row[0],
+                                form: row[1],
+                                className: row[2],
+                                score: row[3],
+                                timeTaken: row[4],
+                                livesLeft: row[5],
+                                status: row[6],
+                                date: row[7]
+                            }));
+                        }
+                        renderTeacherRecords();
+                    })
+                    .getGameRecords();
+            } else {
+                renderTeacherRecords();
+            }
+
+            toggleTeacherDashboard(true);
+        }
+
+        function toggleTeacherDashboard(show) {
+            const modal = document.getElementById('modalTeacher');
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        function renderTeacherRecords() {
+            const formFilter = document.getElementById('filterForm').value;
+            const searchFilter = document.getElementById('filterSearch').value.toLowerCase();
+            const tbody = document.getElementById('teacherTableBody');
+
+            tbody.innerHTML = '';
+
+            // Copy and Sort Records by Highest Score then Lowest Time
+            let filtered = [...teacherStorageRecords].filter(rec => {
+                const matchForm = (formFilter === 'ALL' || rec.form === formFilter);
+                const matchSearch = rec.name.toLowerCase().includes(searchFilter) || rec.className.toLowerCase().includes(searchFilter);
+                return matchForm && matchSearch;
+            });
+
+            filtered.sort((a, b) => b.score - a.score);
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-500">Tiada rekod murid dijumpai.</td></tr>`;
+                return;
+            }
+
+            filtered.forEach((rec, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/50 transition border-b border-slate-800/40";
+                
+                let rankBadge = `<span class="font-bold text-slate-400">#${idx + 1}</span>`;
+                if (idx === 0) rankBadge = `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/50 rounded-md font-bold">🥇 1</span>`;
+                if (idx === 1) rankBadge = `<span class="px-2 py-0.5 bg-slate-400/20 text-slate-300 border border-slate-400/50 rounded-md font-bold">🥈 2</span>`;
+                if (idx === 2) rankBadge = `<span class="px-2 py-0.5 bg-amber-800/20 text-amber-500 border border-amber-700/50 rounded-md font-bold">🥉 3</span>`;
+
+                tr.innerHTML = `
+                    <td class="p-3">${rankBadge}</td>
+                    <td class="p-3 font-semibold text-white">${escapeHtml(rec.name)}</td>
+                    <td class="p-3">${escapeHtml(rec.form)}</td>
+                    <td class="p-3">${escapeHtml(rec.className)}</td>
+                    <td class="p-3 font-bold text-emerald-400">${rec.score} M</td>
+                    <td class="p-3 font-mono">${rec.timeTaken}</td>
+                    <td class="p-3">${rec.livesLeft} / 3</td>
+                    <td class="p-3">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${rec.status === 'Menang' ? 'bg-emerald-950 text-emerald-300 border border-emerald-600' : 'bg-red-950 text-red-300 border border-red-600'}">
+                            ${rec.status}
+                        </span>
+                    </td>
+                    <td class="p-3 text-[10px] text-slate-400">${rec.date || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateGlobalTimerSetting() {
+            const customVal = parseInt(document.getElementById('inputCustomTimer').value);
+            if (customVal && customVal > 0) {
+                gameTimer.totalSeconds = customVal * 60;
+                alert(`Tempoh masa permainan dikemas kini kepada ${customVal} minit untuk percubaan seterusnya!`);
+            }
+        }
+
+        function toggleGuideModal(show) {
+            document.getElementById('modalGuide').classList.toggle('hidden', !show);
+        }
+
+        function toggleGASGuideModal(show) {
+            document.getElementById('modalGASGuide').classList.toggle('hidden', !show);
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&<>"']/g, function(m) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+            });
+        }
+    </script>
+</body>
+</html>
